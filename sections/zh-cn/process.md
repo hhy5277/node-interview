@@ -1,10 +1,10 @@
 # 进程
 
-* [`[Doc]` Process (进程)](https://github.com/ElemeFE/node-interview/blob/master/sections/process.md#process)
-* [`[Doc]` Child Processes (子进程)](https://github.com/ElemeFE/node-interview/blob/master/sections/process.md#child-process)
-* [`[Doc]` Cluster (集群)](https://github.com/ElemeFE/node-interview/blob/master/sections/process.md#cluster)
-* [`[Basic]` 进程间通信](https://github.com/ElemeFE/node-interview/blob/master/sections/process.md#进程间通信)
-* [`[Basic]` 守护进程](https://github.com/ElemeFE/node-interview/blob/master/sections/process.md#守护进程)
+* [`[Doc]` Process (进程)](/sections/zh-cn/process.md#process)
+* [`[Doc]` Child Processes (子进程)](/sections/zh-cn/process.md#child-process)
+* [`[Doc]` Cluster (集群)](/sections/zh-cn/process.md#cluster)
+* [`[Basic]` 进程间通信](/sections/zh-cn/process.md#进程间通信)
+* [`[Basic]` 守护进程](/sections/zh-cn/process.md#守护进程)
 
 ## 简述
 
@@ -108,7 +108,7 @@ function test() {
 
 > <a name="q-fork"></a> child_process.fork 与 POSIX 的 fork 有什么区别?
 
-Node.js 的 `child_process.fork()` 不像 POSIX [fork(2)](http://man7.org/linux/man-pages/man2/fork.2.html) 系统调用, 不会拷贝当前父进程. 这里对于其他语言转过的同学可能比较误导, 可以作为一个比较偏的面试题.
+Node.js 的 `child_process.fork()` 在 Unix 上的实现最终调用了 POSIX [fork(2)](http://man7.org/linux/man-pages/man2/fork.2.html), 而 POSIX 的 fork 需要手动管理子进程的资源释放 (waitpid), child_process.fork 则不用关心这个问题, Node.js 会自动释放, 并且可以在 option 中选择父进程死后是否允许子进程存活.
 
 * spawn() 启动一个子进程来执行命令
   * options.detached 父进程死后是否允许子进程存活
@@ -128,7 +128,7 @@ Node.js 的 `child_process.fork()` 不像 POSIX [fork(2)](http://man7.org/linux/
 
 > <a name="q-child"></a> 父进程或子进程的死亡是否会影响对方? 什么是孤儿进程?
 
-子进程死亡不会影响父进程, 不过 node 中父进程会收到子进程死亡的信号. 反之父进程死亡, 一般情况下子进程也会跟着死亡, 如果子进程需要死亡却没有随之终止而继续存在的状态, 被称作孤儿进程. 另外, 子进程死亡之后资源没有回收的情况被称作僵死进程.
+子进程死亡不会影响父进程, 不过子进程死亡时（线程组的最后一个线程，通常是“领头”线程死亡时），会向它的父进程发送死亡信号. 反之父进程死亡, 一般情况下子进程也会随之死亡, 但如果此时子进程处于可运行态、僵死状态等等的话, 子进程将被`进程1`（init 进程）收养，从而成为孤儿进程. 另外, 子进程死亡的时候（处于“终止状态”），父进程没有及时调用 `wait()` 或 `waitpid()` 来返回死亡进程的相关信息，此时子进程还有一个 `PCB` 残留在进程表中，被称作僵尸进程.
 
 ## Cluster
 
@@ -161,7 +161,7 @@ console.log('hello');                          // | |    都执行了
 
 在上述代码中 numCPUs 虽然是全局变量但是, 在父进程中修改它, 子进程中并不会改变, 因为父进程与子进程是完全独立的两个空间. 他们所谓的共有仅仅只是都执行了, 并不是同一份.
 
-你可以把父进程执行的部分当做 `a.js`, 子进程执行的部分当做 `b.js`, 你可以把他们想象成是先执行了 `node a.js` 然后 cluster.fork 了几次, 就执行执行了几次 `node b.js`. 而 cluster 模块则是二者之间的一个桥梁, 你可以通过 cluster 提供的方法, 让其二者之间进行沟通交流.
+你可以把父进程执行的部分当做 `a.js`, 子进程执行的部分当做 `b.js`, 你可以把他们想象成是先执行了 `node a.js` 然后 cluster.fork 了几次, 就执行了几次 `node b.js`. 而 cluster 模块则是二者之间的一个桥梁, 你可以通过 cluster 提供的方法, 让其二者之间进行沟通交流.
 
 ### How It Works
 
@@ -169,11 +169,11 @@ worker 进程是由 child_process.fork() 方法创建的, 所以可以通过 IPC
 
 cluster 模块提供了两种分发连接的方式. 
 
-第一种方式 (默认方式, 不适用于 windows), 通过轮询（round-robin）的方式分发连接. 主进程监听端口, 接收到新连接之后, 通过内建的算法来决定将 accept 到的客户端 socket fd 传递给指定的 worker 处理. 使用该方式时, 每个连接由哪个 worker 来处理, 完全由 master 的 round-robin 算法决定.
+第一种方式 (默认方式, 不适用于 windows), 通过时间片轮转法（round-robin）分发连接. 主进程监听端口, 接收到新连接之后, 通过时间片轮转法来决定将接收到的客户端的 socket 句柄传递给指定的 worker 处理. 至于每个连接由哪个 worker 来处理, 完全由内置的循环算法决定.
 
-第二种方式是由主进程创建 socket 监听端口后, 将 socket 的句柄直接分发给相应的 workder, 然后当连接进来时, 就直接由相应的 worker 来 accept 连接并处理.
+第二种方式是由主进程创建 socket 监听端口后, 将 socket 句柄直接分发给相应的 worker, 然后当连接进来时, 就直接由相应的 worker 来接收连接并处理.
 
-使用第二种方式时, 多个 worker 之间会存在竞争关系, 产生一个老生常谈的 "惊群效应" 从而导致效率变低的问题. 该问题常见于 Apache. 并且各自竞争的情况下无法控制一个新的连接由哪个进程来处理, 从而导致各 worker 进程之间的负载不均衡, 比如 70% 的连接终止于八个进程中的两个.
+使用第二种方式时理论上性能应该较高, 然后时间上存在负载不均衡的问题, 比如通常 70% 的连接仅被 8 个进程中的 2 个处理, 而其他进程比较清闲.
 
 ## 进程间通信
 

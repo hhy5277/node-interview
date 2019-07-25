@@ -1,12 +1,12 @@
 # IO
 
-* [`[Doc]` Buffer](https://github.com/ElemeFE/node-interview/blob/master/sections/io.md#buffer)
-* [`[Doc]` String Decoder (字符串解码)](https://github.com/ElemeFE/node-interview/blob/master/sections/io.md#string-decoder)
-* [`[Doc]` Stream (流)](https://github.com/ElemeFE/node-interview/blob/master/sections/io.md#stream)
-* [`[Doc]` Console (控制台)](https://github.com/ElemeFE/node-interview/blob/master/sections/io.md#console)
-* [`[Doc]` File System (文件系统)](https://github.com/ElemeFE/node-interview/blob/master/sections/io.md#file)
-* [`[Doc]` Readline](https://github.com/ElemeFE/node-interview/blob/master/sections/io.md#readline)
-* [`[Doc]` REPL](https://github.com/ElemeFE/node-interview/blob/master/sections/io.md#repl)
+* [`[Doc]` Buffer](/sections/zh-cn/io.md#buffer)
+* [`[Doc]` String Decoder (字符串解码)](/sections/zh-cn/io.md#string-decoder)
+* [`[Doc]` Stream (流)](/sections/zh-cn/io.md#stream)
+* [`[Doc]` Console (控制台)](/sections/zh-cn/io.md#console)
+* [`[Doc]` File System (文件系统)](/sections/zh-cn/io.md#file)
+* [`[Doc]` Readline](/sections/zh-cn/io.md#readline)
+* [`[Doc]` REPL](/sections/zh-cn/io.md#repl)
 
 # 简述
 
@@ -65,7 +65,7 @@ const euro = Buffer.from([0xE2, 0x82, 0xAC]);
 console.log(decoder.write(euro)); // €
 ```
 
-当然也可以断断续续的处理.
+stringDecoder.write 会确保返回的字符串不包含 Buffer 末尾残缺的多字节字符，残缺的多字节字符会被保存在一个内部的 buffer 中用于下次调用 stringDecoder.write() 或 stringDecoder.end()。
 
 ```javascript
 const StringDecoder = require('string_decoder').StringDecoder;
@@ -142,7 +142,7 @@ int copy(const char *src, const char *dest)
 
 ### 对象模式
 
-通过 Node API 创建的流, 只能够对字符串或者 buffer 对象进行操作. 但其实流的实现是可以基于其他的 Javascript 类型(除了 null, 它在流中有特殊的含义)的. 这样的流就处在 "对象模式(objectMode)" 中.
+通过 Node API 创建的流, 只能够对字符串或者 buffer 对象进行操作. 但其实流的实现是可以基于其他的 JavaScript 类型(除了 null, 它在流中有特殊的含义)的. 这样的流就处在 "对象模式(objectMode)" 中.
 在创建流对象的时候, 可以通过提供 `objectMode` 参数来生成对象模式的流. 试图将现有的流转换为对象模式是不安全的.
 
 ### 缓冲区
@@ -199,7 +199,7 @@ pipe 方法最主要的目的就是将数据的流动缓冲到一个可接受的
 
 ## Console
 
-[console.log 正常情况下是异步的, 除非你使用 `new Console(stdout[, stderr])` 指定了一个文件为目的地](https://nodejs.org/dist/latest-v6.x/docs/api/console.html#console_asynchronous_vs_synchronous_consoles). 不过一般情况下的实现都是如下 ([6.x 源代码](https://github.com/nodejs/node/blob/v6.x/lib/console.js#L42)):
+[console.log 同步还是异步取决于与谁相连和`os`](https://nodejs.org/dist/latest-v6.x/docs/api/process.html#process_a_note_on_process_i_o). 不过一般情况下的实现都是如下 ([6.x 源代码](https://github.com/nodejs/node/blob/v6.x/lib/console.js#L42))，其中`this._stdout`默认是`process.stdout`:
 
 ```javascript
 // As of v8 5.0.71.32, the combination of rest param, template string
@@ -242,11 +242,19 @@ function Console(stdout, stderr) {
 
 Node.js 封装了标准 POSIX 文件 I/O 操作的集合. 通过 require('fs') 可以加载该模块. 该模块中的所有方法都有异步执行和同步执行两个版本. 你可以通过 fs.open 获得一个文件的文件描述符.
 
+### 编码
+
+// TODO
+
+UTF8, GBK, es6 中对编码的支持, 如何计算一个汉字的长度
+
+BOM
+
 ### stdio
 
 stdio (standard input output) 标准的输入输出流, 即输入流 (stdin), 输出流 (stdout), 错误流 (stderr) 三者. 在 Node.js 中分别对应 `process.stdin` (Readable), `process.stdout` (Writable) 以及 `process.stderr` (Writable) 三个 stream.
 
-输出函数是每个人在学习任何一门编程语言时所需要学到的第一个函数. 例如 C语言的 `printf("hello, world!");` python/ruby 的 `print 'hello, world!'` 以及 Javascript 中的 `console.log('hello, world!');`
+输出函数是每个人在学习任何一门编程语言时所需要学到的第一个函数. 例如 C语言的 `printf("hello, world!");` python/ruby 的 `print 'hello, world!'` 以及 JavaScript 中的 `console.log('hello, world!');`
 
 以 C语言的伪代码来看的话, 这类输出函数的实现思路如下:
 
@@ -277,7 +285,7 @@ int printf(FILE *stream, 要打印的内容)
 
 当你使用 ssh 在远程服务器上运行一个命令的时候, 在服务器上的命令输出虽然也是写入到服务器上 shell 的 stdout, 但是这个远程的 shell 是从 sshd 服务上 fork 出来的, 其 stdout 是继承自 sshd 的一个 fd, 这个 fd 其实是个 socket, 所以最终其实是写入到了一个 socket 中, 通过这个 socket 传输你本地的计算机上的 shell 的 stdout.
 
-如果你理解了上述情况, 那么你也就能理解为什么守护进程需要关闭 stdio, 如果切到后台的守护进程没有关闭 stdio 的话, 那么你在用 shell 操作的过程中, 屏幕上会莫名其妙的多出来一些输出. 此处对应[守护进程](https://github.com/ElemeFE/node-interview/blob/master/sections/process.md#守护进程)的 C 实现中的这一段:
+如果你理解了上述情况, 那么你也就能理解为什么守护进程需要关闭 stdio, 如果切到后台的守护进程没有关闭 stdio 的话, 那么你在用 shell 操作的过程中, 屏幕上会莫名其妙的多出来一些输出. 此处对应[守护进程](/sections/zh-cn/process.md#守护进程)的 C 实现中的这一段:
 
 ```c
 for (; i < getdtablesize(); ++i) {
@@ -293,7 +301,7 @@ console.log(process.stdout.fd); // 1
 console.log(process.stderr.fd); // 2
 ```
 
-在上一节中的 [在 IPC 通道建立之前, 父进程与子进程是怎么通信的? 如果没有通信, 那 IPC 是怎么建立的?](https://github.com/ElemeFE/node-interview/blob/master/sections/process.md#q-child) 中使用环境变量传递 fd 的方法, 这么看起来就很直白了, 因为传递 fd 其实是直接传递了一个整型数字.
+在上一节中的 [在 IPC 通道建立之前, 父进程与子进程是怎么通信的? 如果没有通信, 那 IPC 是怎么建立的?](/sections/zh-cn/process.md#q-child) 中使用环境变量传递 fd 的方法, 这么看起来就很直白了, 因为传递 fd 其实是直接传递了一个整型数字.
 
 ### 如何同步的获取用户的输入?
 

@@ -1,10 +1,10 @@
 # 事件/异步
 
-* [`[Basic]` Promise](https://github.com/ElemeFE/node-interview/blob/master/sections/event-async.md#promise)
-* [`[Doc]` Events (事件)](https://github.com/ElemeFE/node-interview/blob/master/sections/event-async.md#events)
-* [`[Doc]` Timers (定时器)](https://github.com/ElemeFE/node-interview/blob/master/sections/event-async.md#timers)
-* [`[Point]` 阻塞/异步](https://github.com/ElemeFE/node-interview/blob/master/sections/event-async.md#阻塞异步)
-* [`[Point]` 并行/并发](https://github.com/ElemeFE/node-interview/blob/master/sections/event-async.md#并行并发)
+* [`[Basic]` Promise](/sections/zh-cn/event-async.md#promise)
+* [`[Doc]` Events (事件)](/sections/zh-cn/event-async.md#events)
+* [`[Doc]` Timers (定时器)](/sections/zh-cn/event-async.md#timers)
+* [`[Point]` 阻塞/异步](/sections/zh-cn/event-async.md#阻塞异步)
+* [`[Point]` 并行/并发](/sections/zh-cn/event-async.md#并行并发)
 
 ## 简述
 
@@ -12,9 +12,9 @@
 
 ## Promise
 
-![callback-hell](https://github.com/ElemeFE/node-interview/blob/master/assets/callback-hell.jpg)
+![callback-hell](/assets/callback-hell.jpg)
 
-相信很多同学在面试的时候都碰到过这样一个问题, `如何处理 Callback Hell`. 在早些年的时候, 大家会看到有很多的解决方案例如 [Q](https://www.npmjs.com/package/q), [async](https://www.npmjs.com/package/async), [EventProxy](https://www.npmjs.com/package/eventproxy) 等等. 最后从流行程度来看 `Promise` 当之无愧的独领风骚, 并且是在 ES6 的 Javascript 标准上赢得了支持.
+相信很多同学在面试的时候都碰到过这样一个问题, `如何处理 Callback Hell`. 在早些年的时候, 大家会看到有很多的解决方案例如 [Q](https://www.npmjs.com/package/q), [async](https://www.npmjs.com/package/async), [EventProxy](https://www.npmjs.com/package/eventproxy) 等等. 最后从流行程度来看 `Promise` 当之无愧的独领风骚, 并且是在 ES6 的 JavaScript 标准上赢得了支持.
 
 关于它的基础知识/概念推荐看阮一峰的 [Promise 对象](http://javascript.ruanyifeng.com/advanced/promise.html#toc9) 这里就不多不赘述.
 
@@ -35,7 +35,7 @@ doSth.then(() => {
 });
 ```
 
-毫无疑问的可以得到一下输出结果:
+毫无疑问的可以得到以下输出结果:
 
 ```
 hello
@@ -59,7 +59,25 @@ setTimeout(() => {
 }, 10000);
 ```
 
-如果你不了解这两个问题, 可以自己在本地尝试研究一下打印的结果. 这里希望你掌握的是 Promise 的状态转换, 以及异步与 Promise 的关系, Promise 如何帮助你处理异步, 如果你研究过 Promise 的实现那就更好了.
+以及理解如下代码的执行顺序 ([出处](https://zhuanlan.zhihu.com/p/25407758)):
+
+```javascript
+setTimeout(function() {
+  console.log(1)
+}, 0);
+new Promise(function executor(resolve) {
+  console.log(2);
+  for( var i=0 ; i<10000 ; i++ ) {
+    i == 9999 && resolve();
+  }
+  console.log(3);
+}).then(function() {
+  console.log(4);
+});
+console.log(5);
+```
+
+如果你不了解这些问题, 可以自己在本地尝试研究一下打印的结果. 这里希望你掌握的是 Promise 的状态转换, 包括异步与 Promise 的关系, 以及 Promise 如何帮助你处理异步, 如果你研究过 Promise 的实现那就更好了.
 
 ## Events
 
@@ -123,7 +141,7 @@ emitter.emit('myEvent');
 
 使用 emitter 处理问题可以处理比较复杂的状态场景, 比如 TCP 的复杂状态机, 做多项异步操作的时候每一步都可能报错, 这个时候 .emit 错误并且执行某些 .once 的操作可以将你从泥沼中拯救出来.
 
-另外可以注意一下的是, 有些同学喜欢用 emitter 来监控某些类的状态, 但是在这些类释放的时候可能会忘记释放 emitter, 而 emitter 的 listener 可能一直这些类的内部持有其引用从而可能导致内存泄漏.
+另外可以注意一下的是, 有些同学喜欢用 emitter 来监控某些类的状态, 但是在这些类释放的时候可能会忘记释放 emitter, 而这些类的内部可能持有该 emitter 的 listener 的引用从而导致内存泄漏.
 
 ## 阻塞/异步
 
@@ -190,7 +208,7 @@ function sleep(ms) {
    └───────────────────────┘
 ```
 
-关于事件循环, Timers 以及 nextTick 的关系详见官方文档 [The Node.js Event Loop, Timers, and process.nextTick() (英文)](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/) 以及阮一峰的 [JavaScript 运行机制详解：再谈Event Loop (中文)](http://www.ruanyifeng.com/blog/2014/10/event-loop.html) 等.
+关于事件循环, Timers 以及 nextTick 的关系详见官方文档 The Node.js Event Loop, Timers, and process.nextTick(): [英文](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)， [论坛中文讨论](https://cnodejs.org/topic/57d68794cb6f605d360105bf) 以及 [Tasks, microtasks, queues and schedules](https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/)
 
 ## 并行/并发
 
@@ -204,6 +222,6 @@ function sleep(ms) {
 
 并行 (Parallel) = 2 队列对应 2 咖啡机.
 
-Node.js 通过事件循环来挨个抽取实践队列中的一个个 Task 执行, 从而避免了传统的多线程情况下 `2个队列对应 1个咖啡机` 的时候上线文切换以及资源争抢/同步的问题, 所以获得了高并发的成就.
+Node.js 通过事件循环来挨个抽取事件队列中的一个个 Task 执行, 从而避免了传统的多线程情况下 `2个队列对应 1个咖啡机` 的时候上下文切换以及资源争抢/同步的问题, 所以获得了高并发的成就.
 
 至于在 node 中并行, 你可以通过 cluster 来再添加一个咖啡机.
